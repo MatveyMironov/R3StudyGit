@@ -1,0 +1,46 @@
+using HealthSystem;
+using R3;
+using System;
+using UnityEngine;
+
+namespace DeathSystem
+{
+    public class Warning : IDisposable
+    {
+        private readonly GameObject _warningTab;
+        private readonly int _criticalHealthPoints;
+
+        public Warning(Health health, GameObject warningTab, int criticalHealthPoints)
+        {
+            if (health is null) { throw new ArgumentNullException(nameof(health)); }
+
+            _warningTab = warningTab != null ? warningTab : throw new ArgumentNullException(nameof(warningTab));
+            _criticalHealthPoints = criticalHealthPoints;
+
+            StartWarning(health);
+        }
+
+        private IDisposable _startWarningSubscription;
+        private IDisposable _stopWarningSubscription;
+
+        private void StartWarning(Health health)
+        {
+            _warningTab.SetActive(true);
+            _startWarningSubscription?.Dispose();
+            _stopWarningSubscription = health.HealthPoints.Where(healthPoints => healthPoints > _criticalHealthPoints).Subscribe(_ => StopWarning(health));
+        }
+
+        private void StopWarning(Health health)
+        {
+            _warningTab.SetActive(false);
+            _stopWarningSubscription?.Dispose();
+            _startWarningSubscription = health.HealthPoints.Where(healthPoints => healthPoints <= _criticalHealthPoints).Subscribe(_ => StartWarning(health));
+        }
+
+        public void Dispose()
+        {
+            _startWarningSubscription?.Dispose();
+            _stopWarningSubscription?.Dispose();
+        }
+    }
+}

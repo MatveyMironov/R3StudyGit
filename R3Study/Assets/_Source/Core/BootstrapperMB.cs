@@ -1,3 +1,4 @@
+using DeathSystem;
 using HealingSystem;
 using HealthSystem;
 using R3;
@@ -18,6 +19,11 @@ namespace Core
         [SerializeField] private int maxRestoredHealthPoints;
         [SerializeField] private HealingDisplayerMB healingDisplayer;
 
+        [Header("Death")]
+        [SerializeField] private GameObject deathPanel;
+        [SerializeField] private GameObject warningTab;
+        [SerializeField] private int criticalHealth;
+
         private CompositeDisposable _disposable;
 
         private void Start()
@@ -37,6 +43,12 @@ namespace Core
             healing.MaxRestoredHealthPoints.Value = maxRestoredHealthPoints;
             healingDisplayer.DisplayHealing(healing);
             _disposable.Add(healing);
+
+            Death death = new(health, deathPanel);
+            _disposable.Add(death);
+
+            Warning warning = new(health, warningTab, criticalHealth);
+            _disposable.Add(warning);
         }
 
         private void OnDestroy()
