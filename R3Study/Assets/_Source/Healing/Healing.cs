@@ -7,14 +7,14 @@ namespace HealingSystem
 {
     public class Healing : IDisposable
     {
-        private readonly HealthController _health;
+        private readonly Health _health;
         private readonly HealingInventory _inventory;
 
         private readonly ReactiveProperty<bool> _isAbleToHeal = new();
 
         private readonly CompositeDisposable _subscriptions = new();
 
-        public Healing(HealthController health, HealingInventory inventory)
+        public Healing(Health health, HealingInventory inventory)
         {
             _health = health ?? throw new System.ArgumentNullException(nameof(health));
             _inventory = inventory ?? throw new System.ArgumentNullException(nameof(inventory));

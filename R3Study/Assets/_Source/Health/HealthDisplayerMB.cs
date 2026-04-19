@@ -1,5 +1,6 @@
 using CustomUISystem;
 using R3;
+using System;
 using UnityEngine;
 
 namespace HealthSystem
@@ -7,32 +8,48 @@ namespace HealthSystem
     public class HealthDisplayerMB : MonoBehaviour
     {
         [SerializeField] private ANumberDisplayerMB healthPointsDisplayer;
+        [SerializeField] private ANumberDisplayerMB maxHealthPointsDisplayer;
 
-        public HealthController DisplayedHealth { get; private set; }
+        private Health _displayedHealth;
+        private CompositeDisposable _subscriptions;
 
         private void OnDestroy()
         {
-            
+            HideHealth();
         }
 
-        public void DisplayHealth(HealthController health)
+        public void DisplayHealth(Health health)
         {
             HideHealth();
-            DisplayedHealth = health;
+            _displayedHealth = health;
 
-            health.HealthPoints.Subscribe(DisplayHealthPoints);
+            _subscriptions = new();
+            IDisposable healthPointSubscription = health.HealthPoints.Subscribe(DisplayHealthPoints);
+            _subscriptions.Add(healthPointSubscription);
+            IDisposable maxHealthPointsSubscription = health.MaxHealthPoints.Subscribe(DisplayMaxHealthPoints);
         }
 
         public void HideHealth()
         {
-            if (DisplayedHealth == null) { return; }
+            _subscriptions?.Dispose();
+            _displayedHealth = null;
+        }
 
-            DisplayedHealth = null;
+        public void ChangeHealthPoints(int delta)
+        {
+            if (_displayedHealth == null) { return; }
+
+            _displayedHealth.ChangeHealthPoints(delta);
         }
 
         private void DisplayHealthPoints(int healthPoints)
         {
             healthPointsDisplayer.DisplayNumber(healthPoints);
+        }
+
+        private void DisplayMaxHealthPoints(int healthPoints)
+        {
+            maxHealthPointsDisplayer.DisplayNumber(healthPoints);
         }
     }
 }

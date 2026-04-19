@@ -2,7 +2,7 @@ using R3;
 
 namespace HealthSystem
 {
-    public class HealthController
+    public class Health
     {
         private readonly ReactiveProperty<int> _healthPoints = new();
 
