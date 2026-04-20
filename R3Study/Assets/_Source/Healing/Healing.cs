@@ -1,4 +1,5 @@
-using HealthSystem;
+using StatSystem;
+using InventorySystem;
 using R3;
 using System;
 using UnityEngine;
@@ -7,21 +8,21 @@ namespace HealingSystem
 {
     public class Healing : IDisposable
     {
-        private readonly Health _health;
-        private readonly HealingInventory _inventory;
+        private readonly Stat _health;
+        private readonly ItemInventory _healingItemInventory;
 
         private readonly ReactiveProperty<bool> _isAbleToHeal = new();
 
         private readonly CompositeDisposable _subscriptions = new();
 
-        public Healing(Health health, HealingInventory inventory)
+        public Healing(Stat health, ItemInventory healingItemInventory)
         {
             _health = health ?? throw new System.ArgumentNullException(nameof(health));
-            _inventory = inventory ?? throw new System.ArgumentNullException(nameof(inventory));
+            _healingItemInventory = healingItemInventory ?? throw new System.ArgumentNullException(nameof(healingItemInventory));
 
-            IDisposable healthPointsSubscription = _health.HealthPoints.Subscribe(_ => SetIsAbleToHeal());
+            IDisposable healthPointsSubscription = _health.StatPoints.Subscribe(_ => SetIsAbleToHeal());
             _subscriptions.Add(healthPointsSubscription);
-            IDisposable healingItemsSubscription = _inventory.HealingItems.Subscribe(_ => SetIsAbleToHeal());
+            IDisposable healingItemsSubscription = _healingItemInventory.ItemCount.Subscribe(_ => SetIsAbleToHeal());
             _subscriptions.Add(healingItemsSubscription);
         }
 
@@ -31,9 +32,9 @@ namespace HealingSystem
         public bool TryHeal()
         {
             if (!_isAbleToHeal.CurrentValue) { return false; }
+            if (!_healingItemInventory.TryChangeItemCount(-1)) { return false; }
 
-            _inventory.HealingItems.Value -= 1;
-            _health.ChangeHealthPoints(MaxRestoredHealthPoints.CurrentValue);
+            _health.ChangeStatPoints(MaxRestoredHealthPoints.CurrentValue);
             return true;
         }
 
@@ -44,8 +45,8 @@ namespace HealingSystem
 
         private void SetIsAbleToHeal()
         {
-            if (_health.HealthPoints.CurrentValue >= _health.MaxHealthPoints.CurrentValue
-                || _inventory.HealingItems.CurrentValue <= 0)
+            if (_health.StatPoints.CurrentValue >= _health.MaxStatPoints.CurrentValue
+                || _healingItemInventory.ItemCount.CurrentValue <= 0)
             {
                 if (_isAbleToHeal.CurrentValue == false) { return; }
 
