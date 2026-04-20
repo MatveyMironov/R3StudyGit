@@ -4,6 +4,7 @@ using StatSystem;
 using InventorySystem;
 using R3;
 using UnityEngine;
+using SpellSystem;
 
 namespace Core
 {
@@ -24,8 +25,17 @@ namespace Core
         [SerializeField] private int maxManaPoints;
         [SerializeField] private int startManaPoints;
         [SerializeField] private StatDisplayerMB manaDisplayer;
+
+        [Header("Mana Healing")]
         [SerializeField] private int startManaPotions;
         [SerializeField] private ItemInventoryDisplayerMB manaPotionInventoryDisplayer;
+        [SerializeField] private int maxRestoredManaPoints;
+        [SerializeField] private HealingDisplayerMB manaHealingDisplayer;
+
+        [Header("Spell Cast")]
+        [SerializeField] private int requiredManaPoints;
+        [SerializeField] private int spentManaPoints;
+        [SerializeField] private SpellCastDisplayerMB spellCastDisplayer;
 
         [Header("Coins")]
         [SerializeField] private int startCoins;
@@ -67,6 +77,17 @@ namespace Core
             ItemInventory manaPotionInventory = new();
             manaPotionInventory.TryChangeItemCount(startManaPotions);
             manaPotionInventoryDisplayer.DisplayItemInventory(manaPotionInventory);
+
+            Healing manaHealing = new(mana, manaPotionInventory);
+            manaHealing.MaxRestoredHealthPoints.Value = maxRestoredManaPoints;
+            manaHealingDisplayer.DisplayHealing(manaHealing);
+            _disposable.Add(manaHealing);
+
+            SpellCast spellCast = new(mana);
+            spellCast.RequiredManaPoints.Value = requiredManaPoints;
+            spellCast.SpentManaPoints.Value = spentManaPoints;
+            spellCastDisplayer.DisplaySpellCast(spellCast);
+            _disposable.Add(spellCast);
 
             ItemInventory coinInventory = new();
             coinInventory.TryChangeItemCount(startCoins);
